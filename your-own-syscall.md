@@ -1,4 +1,4 @@
-# Your own syscall
+# Your Own Syscall
 
 As the only software interface that bridges the kernel and the user space, syscalls works like kernel APIs, except that most of them are fixed and rarely changed. In a lot of time you might find yourself want some new functions provided by the kernel. And that's when you need to create your own syscall.
 
