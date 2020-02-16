@@ -39,5 +39,31 @@ VMCB is divided into two areas, the control area and the save area. Control area
 
 Combining with the code from VMEXIT, you can actually see how VMCB is working. Each CPU has its structure with a VMCB. When VMEXIT triggers, `nested_svm_vmexit` saves the **real** VMCB of the CPU to a place in the memory and unload that VM.
 
+## AMD SEV
 
+AMD SEV \(Secure Encrypted Virtualization\) is a technology that will encrypt the memory of the VM so that hypervisor won't be able to access the information in it. It is based on the belief that hypervisor could be malicious and thus should not be trusted. 
+
+The way SEV works is based on the nature of paged memory management. You see the VM is also managing its memory using pages, so actually the pages VM is using is mapped into real physical pages in the memory by the hypervisor. If we add an encryption engine to encrypt each page on the CPU side, and drops the key when VMEXIT, then hypervisor is never able to know the content inside the page. It could still manage the page as always, just without the ability to know what's inside.
+
+So now the problem is: Who manages the keys of each VM? It may sounds rediculous enough but the CPU does. During the SLAT process, each VM will get its own ASID \(Address Space ID\) which is managed by the hypervisor. So when the hypervisor do VMRUN, the corressponded ASID is loaded into the CPU and the CPU will be able to use the ASID as the index to find the corressponede key. Hypervisor is never able to know what exactly is the key. However on the guest OS side, since the encryption is done by the CPU, nothing much is a concern either.
+
+OK, CPU manages the key, hypervisor manages the memory, guest OS works happily, smooth sailing, right? Not really.
+
+### AMD SEV-ES
+
+Suddenly a new word here. SEV-ES means Security Encrypted Virtualization - Encrypted State. Still remember the VMCB we talked before? Each VMEXIT will save the registers inside the save area of the VMCB. Indeed in AMD SEV the memory is encrypted but NOT the VMCB. Think of it, if the hypervisor unload all the page of the VM onto the disk and cause a page fault \(which will lead to a VMEXIT\) on every memory access, then every move of the VM could be exposed to the hypervisor due to the leaking registers.
+
+SEV-ES was introduced to solve the problem. Now the save area of the VMCB is also encrypted. Done.
+
+... or is it?
+
+### GHCB
+
+Think of it. You are now doing `cpuid`. Obviously as a hypervisor, to really implement the `cpuid`, you have to know `eax`, and you have to change other registers. Now they are encrypted, you are screwed. Don't worry, AMD got you covered - Introducing GHCB, Guest Hypervisor Communication Block.
+
+GHCB is an area of unencrypted memory after the save area that servers as the somehow trusted area between the guest OS and hypervisor. If you, as a guest OS, intentioned to tell hypervisor something, the put them here. If you, as a hypervisor, changed some register, put them here. Done.
+
+## Is AMD SEV-ES Safe After All
+
+The anwser is ... in one way or another yes. In most cases hypervisor is never going to be able to steal a hair from the VM. But if the VM is running special software like an HTTP server, things could be done in a very unexpected way. See [https://arxiv.org/pdf/1805.09604.pdf](https://arxiv.org/pdf/1805.09604.pdf) for a real life case.
 
