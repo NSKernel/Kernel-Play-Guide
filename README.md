@@ -12,6 +12,8 @@ As a CS student doing system research, I totally understand that feeling. I have
 
 This book is NOT A DOCUMENTATION, and is NOT AN INTRODUCTION TO THE LINUX KERNEL. It functions as a manual, a what-to-do, instead of a how-it-works. It covers from the most fundamental things like where to find the kernel source code and how to build a custom kernel, all the way to the structures and flows in the kernel. 
 
+Some technologies outside the Linux Kernel will be introduced as how-it-works, however, but those are written for better understanding of what-to-do in the kernel instead of and introduction.
+
 ## Should you read it
 
 GEEK OUT. If you do not know what EXACTLY you want to find in this book then you should probably not read it. If you want to know how Linux works or even just want to learn some OS basics, then you should seek for something else. Like Apple says in their documentations of the Darwin Kernel \(macOS's kernel\), _there are many good introductory operating systems texts, this is not one of them_. 
