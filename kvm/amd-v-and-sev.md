@@ -2,7 +2,7 @@
 
 AMD-V is not something new. In the past it's called AMD SVM \(Secure Virtual Machine\). For any reason it might be AMD renamed it to AMD-V. It is not secure at the first place anyway so the name change is not a big deal. For convention reasons, we are still calling it SVM inside the kernel, just like we are calling x86-64 as AMD64.
 
-Since the age of cloud, VM security is growing its importance. It is always cool to hide things, and SEV gets you covered. AMD SEV is a technology helping you encrypting your VM. It does not trust the hypervisor but it could poo in your pants too. More on that later.
+Since the age of cloud, VM security is growing its importance. It is always cool to hide things, and SEV gets you covered. AMD SEV is a technology helping you encrypting your VM. It does not trust the hypervisor but it could poop in your pants too. More on that later.
 
 Most of the code implementing AMD-V and SEV and be found under `/arch/x86/kvm/svm.c`. In Linux 4.20 it's a 7209-line file and reading it can be a pain in the ass.
 
