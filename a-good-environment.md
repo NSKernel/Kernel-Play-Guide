@@ -31,7 +31,7 @@ Line 2 you are giving your kernel's path. Line 3 is the arguments for the kernel
 
 Now a QEMU window will popup and you are good to go.
 
-However, there are times when a GUI is not prefered or simply not available. The following script gets you covered.
+However, there are times when a GUI is not prefered or simply not available, like an SSH session. The following script gets you covered.
 
 ```bash
 sudo qemu-system-x86_64 \

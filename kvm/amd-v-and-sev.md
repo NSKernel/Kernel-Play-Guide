@@ -65,5 +65,5 @@ GHCB is an area of unencrypted memory after the save area that servers as the so
 
 ## Is AMD SEV-ES Safe After All
 
-The anwser is ... in one way or another yes. In most cases hypervisor is never going to be able to steal a hair from the VM. But if the VM is running special software like an HTTP server, things could be done in a very unexpected way. See [https://arxiv.org/pdf/1805.09604.pdf](https://arxiv.org/pdf/1805.09604.pdf) for a real life case.
+The anwser is ... in one way or another yes. In most cases hypervisor is never going to be able to steal a hair from the VM. But if the VM is running special software like an HTTP server, things could be done in a very unexpected way. See [https://arxiv.org/pdf/1805.09604.pdf](https://arxiv.org/pdf/1805.09604.pdf) for a real life case. AMD is implementing a next generation SEV with integrity check, hopefully that would be secure enough.
 
