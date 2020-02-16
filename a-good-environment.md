@@ -1,6 +1,14 @@
-# A Good Environment
+# Tools And Environment
 
 Now you have your kernel, but might still not know where to start. So before you start your adventure into the kernel, you might want some appropriate gears. 
+
+## A Cross Referencer
+
+It's never fun to play with such a large project like Linux without knowing who's who. Knowing where each identifier is used and defined is really important. Such tool is called a cross referencer. Tons of cross referencers are available and any one of them works. But to get on board quicker without hours of code analysis, an online service might be prefered. Luckily enough, there exists such service.
+
+My choice is [https://elixir.bootlin.com](https://elixir.bootlin.com). You can select the kernel version from the left and view each file and click identifiers on the page. 
+
+You may have your own favour. As long as it works, it's good.
 
 ## QEMU
 
