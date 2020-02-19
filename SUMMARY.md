@@ -7,7 +7,9 @@
 * [Target a Specific Thread](target-a-specific-thread.md)
 * [KVM](kvm/README.md)
   * [AMD-V and SEV](kvm/amd-v-and-sev.md)
-* [Intel SGX in Linux - Under Construction](intel-sgx-in-linux-under-construction.md)
 * [Architectural](architectural/README.md)
   * [x86-64: 0x0F Prefix - Two-Byte Opcode](architectural/x86-64-0x0f-prefix-two-byte-opcode.md)
+  * [Intel SGX in Linux - Under Construction](architectural/intel-sgx-in-linux-under-construction.md)
+* [Hacking Interrupts, Exceptions and Trap Handlers](hacking-interrupts-exceptions-and-trap-handlers/README.md)
+  * [Accessing User Memory in Trap Handlers](hacking-interrupts-exceptions-and-trap-handlers/accessing-user-memory-in-trap-handlers.md)
 
