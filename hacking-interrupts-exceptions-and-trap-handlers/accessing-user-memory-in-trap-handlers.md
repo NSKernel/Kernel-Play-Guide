@@ -34,3 +34,7 @@ As curious or frustrated you might be, why a simple dereference won't work? Gene
 
 Actually it's rather tricky. Now RTFSC gives us some hints. At `/arch/x86/include/asm/uaccess.h` you can find `get_user`. `get_user` do some simple checks then you will find the true worker function: `__get_user_asm`. At a first glance you can only see several `mov` instructions. But quickly you should notice the `.section .fixup` and `.previous`. `.fixup` if you search on the web, you can see that this is a section that fixes a reallocatable base address. Ah, so when switched into the kernel, indeed the page table stays, but the address you get is the binary address instead of an adjusted reallocated address.
 
+## Risks?
+
+You must take great care with these functions since they can sleep. If in any case you turned off the interrupt and you called these function, you might poop in you pants. They do not necessarily sleep though. Looking at the code there's no sign that they could sleep at all. But when a page fault happens, the OS might schedule a sleep to it so the OS could load the page from the disk. Now you have a dead system.
+
