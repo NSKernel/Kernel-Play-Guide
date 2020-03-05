@@ -18,10 +18,10 @@ Unlike its x86 \(32 bit\) counterpart, there's an instruction `syscall` for sysc
 
 Articles on defining a syscall are quite a mess on the Internet. Some of them work on an older version of kernel but suddenly stop working on a new one. Obviously there's a one and only correct way to do it.
 
-Defining a syscall is done by using the macro `DEFINE_SYSCALLx` provided by `<linux/syscalls.h>` where `x` is the number of the parameters of your syscall. For example, you are creating an adder in your kernel, so the syscall would be
+Defining a syscall is done by using the macro `SYSCALL_DEFINEx` provided by `<linux/syscalls.h>` where `x` is the number of the parameters of your syscall. For example, you are creating an adder in your kernel, so the syscall would be
 
 ```c
-DEFINE_SYSCALL2(adder, int, x, int, y) {
+SYSCALL_DEFINE2(adder, int, x, int, y) {
     return x + y;
 }
 ```
@@ -35,7 +35,7 @@ asmlinkage long sys_adder(int x, int y) {
 }
 ```
 
-The above code shows what a once-worked way to define a syscall. It tells us that a syscall is merely a `long`-typed function. As for why this is wrong, well, it is some convention problem. Read the `DEFINE_SYSCALLx` in `/arch/x86/include/asm/syscall_wrapper.h` to know more.
+The above code shows what a once-worked way to define a syscall. It tells us that a syscall is merely a `long`-typed function. As for why this is wrong, well, it is some convention problem. Read the `SYSCALL_DEFINEx` in `/arch/x86/include/asm/syscall_wrapper.h` to know more.
 
 As a platform limit, remember that you cannot have more than 6 parameters.
 
