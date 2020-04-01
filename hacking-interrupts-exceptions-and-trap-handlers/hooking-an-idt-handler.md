@@ -22,7 +22,7 @@ In most cases hooking an IDT entry is more or less a hacking behaviour. Dated ba
 +}
 ```
 
-Well, fine. Just use `update_intr_gate`.
+Well, fine. Things are gonna be hard because of this.
 
 ## How Linux Defines the IDT
 
@@ -117,9 +117,87 @@ OK now with our defined wrapper and actual C handler, we are ready to hook the h
 update_intr_gate(YOUR_TARGET_TRAP, your_trap_wrapper);
 ```
 
-and you are done.
+and you are done. 
 
-## ... or are you?
+...or are you? True story, if you call this function you will find
 
-You did it, you clean it. Since you hooked the handler, when you are done, you have to restore the original. Looking at `/arch/x86/include/asm/desc.h`, you find the actual IDT table `idt_table`, and a bunch of inline functions to load a store the IDT. Go read it, you know what to do.
+```text
+[  124.629625] Initializing hook module...
+[  124.629626] Hooking IDT...
+[  124.647487] kernel tried to execute NX-protected page - exploit attempt? (uid: 0)                                                                                    
+[  124.648651] BUG: unable to handle kernel paging request at ffffffffaaab0dbd
+[  124.649666] IP: update_intr_gate+0x0/0x20
+```
+
+What? NX-protected? Yes. The reason for that is how `update_intr_gate` is defined.
+
+```text
+void __init update_intr_gate(unsigned int n, const void *addr);
+```
+
+A huge `__init` is there. What's `__init`? It's a macro telling the kernel to free the CODE after booting. So right after Linux is running, you are not gonna be able to use this. The only true way to do this is copying the whole code of `set_intr_gate` and its related functions to your code. I've done this, so just copy my code: 
+
+```c
+#include <linux/kernel.h>
+
+#include <asm/desc.h>
+#include <asm/traps.h>
+#include <asm/ptrace.h>
+
+struct idt_data {
+	unsigned int	vector;
+	unsigned int	segment;
+	struct idt_bits	bits;
+	const void	*addr;
+};
+
+static inline void another_idt_init_desc(gate_desc *gate, const struct idt_data *d)
+{
+	unsigned long addr = (unsigned long) d->addr;
+
+	gate->offset_low	= (u16) addr;
+	gate->segment		= (u16) d->segment;
+	gate->bits		= d->bits;
+	gate->offset_middle	= (u16) (addr >> 16);
+#ifdef CONFIG_X86_64
+	gate->offset_high	= (u32) (addr >> 32);
+	gate->reserved		= 0;
+#endif
+}
+
+static void
+another_idt_setup_from_table(gate_desc *idt, const struct idt_data *t, int size)
+{
+	gate_desc desc;
+
+	for (; size > 0; t++, size--) {
+		another_idt_init_desc(&desc, t);
+		write_idt_entry(idt, t->vector, &desc);
+	}
+}
+
+static void another_set_intr_gate(unsigned int n, const void *addr)
+{
+	struct idt_data data;
+
+	BUG_ON(n > 0xFF);
+
+	memset(&data, 0, sizeof(data));
+	data.vector	= n;
+	data.addr	= addr;
+	data.segment	= __KERNEL_CS;
+	data.bits.type	= GATE_INTERRUPT;
+	data.bits.p	= 1;
+
+	another_idt_setup_from_table(idt_table, &data, 1);
+}
+```
+
+You should know that an exported \(or even just an exposed\) function for setting interrupt gate is extremely dangerous. If you are hooking it, you know the danger. But not everyone. So copy the code to your file and leave them `static`. Use wisely.
+
+## Writing a Module
+
+If you are writing a module, you are going to find that some functions mentioned in the previous sections are not exported. Please check how to use non-exported symbols in modules.
+
+Another thing. You did it, you clean it. Since you hooked the handler, when you are done, you have to restore the original. Looking at `/arch/x86/include/asm/desc.h`, you find the actual IDT table `idt_table`, and a bunch of inline functions to load and store the IDT. Go read it, you know what to do.
 
