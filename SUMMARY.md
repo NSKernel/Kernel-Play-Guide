@@ -6,6 +6,7 @@
 * [Your Own Syscall](your-own-syscall.md)
 * [Target a Specific Thread](target-a-specific-thread.md)
 * [KVM](kvm/README.md)
+  * [Inject An Interrupt](kvm/inject-an-interrupt.md)
   * [AMD-V and SEV](kvm/amd-v-and-sev.md)
 * [Architectural](architectural/README.md)
   * [x86-64: 0x0F Prefix - Two-Byte Opcode](architectural/x86-64-0x0f-prefix-two-byte-opcode.md)
