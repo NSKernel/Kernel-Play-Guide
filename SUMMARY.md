@@ -14,4 +14,5 @@
 * [Hacking Interrupts, Exceptions and Trap Handlers](hacking-interrupts-exceptions-and-trap-handlers/README.md)
   * [Accessing User Memory in Trap Handlers](hacking-interrupts-exceptions-and-trap-handlers/accessing-user-memory-in-trap-handlers.md)
   * [Hooking an IDT handler](hacking-interrupts-exceptions-and-trap-handlers/hooking-an-idt-handler.md)
+* [Accessing the Non-Exported in Modules](accessing-the-non-exported-in-modules.md)
 
