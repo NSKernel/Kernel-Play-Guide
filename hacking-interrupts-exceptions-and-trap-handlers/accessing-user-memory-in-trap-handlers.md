@@ -32,7 +32,25 @@ As curious or frustrated you might be, why a simple dereference won't work? Gene
 [   24.114923] BUG: unable to handle kernel paging request at 0xADDRESS
 ```
 
-Actually it's rather tricky. Now RTFSC gives us some hints. At `/arch/x86/include/asm/uaccess.h` you can find `get_user`. `get_user` do some simple checks then you will find the true worker function: `__get_user_asm`. At a first glance you can only see several `mov` instructions. But quickly you should notice the `.section .fixup` and `.previous`. `.fixup` if you search on the web, you can see that this is a section that fixes a reallocatable base address. Ah, so when switched into the kernel, indeed the page table stays, but the address you get is the binary address instead of an adjusted reallocated address.
+Actually it's rather tricky. Now RTFSC gives us some hints. At `/arch/x86/include/asm/uaccess.h` you can find `get_user`. `get_user` do some simple checks then you will find the true worker function: `__get_user_%P4`, which is one of `__get_user_1,2,4,8` depending on the size you request. In `/arch/x86/lib/getuser.S` where these functions get actual defined, the secret is no more. Let's take the example of `__get_user_1`, the code is
+
+```text
+__KEEPIDENTS__2(__KEEPIDENTS__3)
+		__KEEPIDENTS__4 __KEEPIDENTS__5(__KEEPIDENTS__6), %_ASM_DX
+		cmp TASK_addr_limit(%__KEEPIDENTS__9),%_ASM_AX
+		jae bad_get_user
+		sbb %__KEEPIDENTS__13, %_ASM_DX		/* array_index_mask_nospec() */
+		and %__KEEPIDENTS__16, %_ASM_AX
+		ASM_STAC
+1:	movzbl (%__KEEPIDENTS__19),%edx
+		xor %__KEEPIDENTS__22,%eax
+		ASM_CLAC
+		ret
+ENDPROC(__get_user_1)
+EXPORT_SYMBOL(__get_user_1)
+```
+
+Do you see that `ASM_STAC` and `ASM_CLAC` that wrapped the `mov` instruction? A quick search tells us that these are related to a feature called SMAP \(Supervisor Mode Access Prevention\). Basically the developers of the processors believe that allowing non-restricted kernel access to the user space is fucking dangerous so we need a fucking feature to prevent that. When SMAP is enabled, the kernel will get a page fault if it trys to access user memory. But we all know that the kernel HAS to access the user memory, so they added two instructions to temporarily disable SMAP and to re-enable it. If you'd prefer disable it by yourself instead of using the kernel provided function, it would be absolutly fine as long as you don't break things. So the basic idea behind it is still some sort of [poka-yoke](https://en.wikipedia.org/wiki/Poka-yoke) thing. I personally dislike the idea of having this kind of thing inside the kernel since in the kernel, if you are breaking it, you will break it. Like a Chinese network slang, “防呆不防傻，大力出奇迹” \(It's poka-yoke not stupid-yoke, if you go brute force you are still gonna break it\). 
 
 ## Risks?
 
