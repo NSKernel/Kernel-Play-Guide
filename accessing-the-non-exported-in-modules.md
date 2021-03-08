@@ -1,8 +1,10 @@
 # Accessing the Non-Exported in Modules
 
-The developers of Linux have carefully chosen the useful and non-shitty functions and marked them exported for you to use in your module. But we are not ordinary people and we want more. We want to use any function and variable like we are just a piece of normal kernel code. Obviously those code won't disappear, so we need the key to them - the address.
+The developers of Linux have "carefully" chosen the useful and non-shitty functions and marked them exported for you to use in your module. That is a bizarre choice since a kernel module is already a piece of kernel code and even if you don't export those functions, one can still access them using the address. Personally I dislike this and luckily enough we somehow have a way to get over it.
 
-Seems like someone else in the developer team thinks the same with us and provided us a magical thing called kallsyms. With it, you give whatever the symbol name is, it returns the address to it.
+In the good old days, we have a mechanism called the `kallsyms`. Basically it's a subsystem that can tell you the address of a given symbol name. However, since Linux 5.7.7, a shitty change was made to the kernel that even the `kallsyms` is not exported. This change was made by a kernel maintainer called Will Deacon and you can learn more at [https://lore.kernel.org/lkml/20200221114404.14641-1-will@kernel.org/](https://lore.kernel.org/lkml/20200221114404.14641-1-will@kernel.org/).
+
+So if you are writing a kernel module for versions before 5.7.7, you don't have to read the last subsection. But first of all, let's talk about how to use `kallsyms`.
 
 ## Not All Kernels Are Equal
 
@@ -59,7 +61,7 @@ call a_hidden_function_wrapper
 
 So basically you define a wrapper that save `%rax` and move the pointer to the stack. Then you restore `%rax` and do `ret`.
 
-## Paper Works
+## Paper Works - For Using Before 5.7.7
 
 kallsyms is a dirty beauty. Since we demand more so we use it, it demands us more. kallsyms is exported as a GPL symbol. So if your module is not GPL-licensed then you are not able to use it. You need
 
@@ -68,4 +70,32 @@ MODULE_LICENSE("GPL");
 ```
 
 to use the symbol. But in most cases I hardly think anyone cares about this. You just use it and the world is saved.
+
+## For Using After 5.7.7
+
+Like we said before, after 5.7.7, `kallsyms_lookup_name` is not exported anymore. So you don't have to care about if this is exported as GPL or not, but the one thing is: How do you come over this circumstance? This is going to be really hacky and you are about to use `kprobes`.
+
+`kprobes` is a debugging subsystem in the kernel to help developers probing functions so that they can understand things like performance bottlenecks. And yes you guessed it, we are going to abuse it. You see, if you try to probe a function, it will first gather the information of that function - including its address. Except for some functions that are explicitly black-listed from probing because of security reasons, all other functions can be probed. And of course `kallsyms_lookup_name` is one of those functions that can be probed.
+
+To use kprobes, remember to have `CONFIG_KPROBES=y` in your configuration and include `<linux/kprobes.h>`. You will want some code like:
+
+```c
+unsigned long lookup_kallsyms_lookup_name() {
+    struct kprobe kp;
+    unsigned long addr;
+    
+    memset(&kp, 0, sizeof(struct kprobe));
+    kp.symbol_name = "kallsyms_lookup_name";
+    if (register_kprobe(&kp) < 0) {
+        return 0;
+    }
+    addr = (unsigned long)kp.addr;
+    unregister_kprobe(&kp);
+    return addr;
+}
+```
+
+One might ask that if kprobes can probe most functions, why don't we just replace kallsyms with kprobes? The reason is that first of all kprobes has a blacklist while kallsyms doesn't. Also kallsyms can get variable addresses but kprobes can't.
+
+Funny enough though, if you go and read how kprobes get the address of a function, it eventually calls `kallsyms_lookup_name`. What a shame.
 
